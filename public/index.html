@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KinetiCore — THOR Flywheel Energy Storage</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,500;8..60,600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #EDEFF0;
+    --bg-panel: #F5F6F5;
+    --bg-dark: #12181D;
+    --bg-dark-panel: #1A2128;
+    --ink: #171B1F;
+    --ink-soft: #4A555F;
+    --ink-on-dark: #E9ECEE;
+    --ink-on-dark-soft: #9BA7B0;
+    --line: #C7CDD1;
+    --line-dark: #2C363F;
+    --accent: #B8811E;
+    --accent-deep: #8C6318;
+    --accent-on-dark: #D9A63E;
+    --steel: #3B4C5C;
+    --font-display: 'Space Grotesk', -apple-system, sans-serif;
+    --font-body: 'Source Serif 4', Georgia, serif;
+    --font-mono: 'JetBrains Mono', 'Courier New', monospace;
+  }
+  :root:not([data-theme="light"]) {
+    @media (prefers-color-scheme: dark) {
+      --bg: #14191D;
+      --bg-panel: #1A2128;
+      --ink: #E9ECEE;
+      --ink-soft: #9BA7B0;
+      --line: #2C363F;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #14191D;
+    --bg-panel: #1A2128;
+    --ink: #E9ECEE;
+    --ink-soft: #9BA7B0;
+    --line: #2C363F;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 17px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+  img { max-width: 100%; }
+  .wrap { max-width: 1160px; margin: 0 auto; padding: 0 32px; }
+  @media (max-width: 640px) { .wrap { padding: 0 20px; } }
+
+  h1, h2, h3 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    line-height: 1.12;
+    margin: 0;
+    letter-spacing: -0.01em;
+  }
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    letter-spacing: 0.02em;
+    color: var(--accent);
+  }
+  .num {
+    font-family: var(--font-mono);
+  }
+  a { color: inherit; }
+  .rule { border: none; border-top: 1px solid var(--line); margin: 0; }
+
+  /* ===== NAV ===== */
+  nav {
+    position: sticky; top: 0; z-index: 50;
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--line);
+  }
+  .navrow {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 0;
+  }
+  .brand {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 19px;
+    letter-spacing: -0.01em;
+  }
+  .brand span { color: var(--accent); }
+  .navlinks { display: flex; gap: 28px; font-size: 14.5px; font-family: var(--font-display); }
+  .navlinks a { text-decoration: none; color: var(--ink-soft); }
+  .navlinks a:hover { color: var(--ink); }
+  @media (max-width: 720px) { .navlinks { display: none; } }
+
+  /* ===== HERO ===== */
+  .hero {
+    background: var(--bg-dark);
+    color: var(--ink-on-dark);
+    padding: 88px 0 72px;
+    overflow: hidden;
+  }
+  .hero-grid {
+    display: grid;
+    grid-template-columns: 1.15fr 1fr;
+    gap: 48px;
+    align-items: center;
+  }
+  @media (max-width: 880px) { .hero-grid { grid-template-columns: 1fr; } }
+  .hero h1 {
+    font-size: clamp(34px, 4.4vw, 54px);
+    color: #fff;
+  }
+  .hero .lede {
+    font-family: var(--font-body);
+    color: var(--ink-on-dark-soft);
+    font-size: 18px;
+    max-width: 46ch;
+    margin: 22px 0 0;
+  }
+  .hero-cta { display: flex; gap: 14px; margin-top: 34px; flex-wrap: wrap; }
+  .btn {
+    font-family: var(--font-display);
+    font-size: 14.5px;
+    font-weight: 500;
+    padding: 13px 22px;
+    border-radius: 3px;
+    text-decoration: none;
+    display: inline-block;
+    cursor: pointer;
+    border: 1px solid transparent;
+  }
+  .btn-primary { background: var(--accent-on-dark); color: #17130A; }
+  .btn-primary:hover { background: #E5B550; }
+  .btn-ghost { border-color: var(--line-dark); color: var(--ink-on-dark); background: transparent; }
+  .btn-ghost:hover { border-color: var(--ink-on-dark-soft); }
+  .btn-light { border-color: var(--line); color: var(--ink); background: transparent; }
+  .btn-light:hover { border-color: var(--ink-soft); }
+
+  .flywheel-stage { position: relative; display: flex; justify-content: center; }
+  canvas#flywheel { width: 100%; max-width: 420px; height: auto; }
+  .flywheel-caption {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--ink-on-dark-soft);
+    text-align: center;
+    margin-top: 10px;
+  }
+
+  .exclusivity-strip {
+    border-top: 1px solid var(--line-dark);
+    margin-top: 56px;
+    padding-top: 22px;
+    display: flex; gap: 40px; flex-wrap: wrap;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--ink-on-dark-soft);
+  }
+  .exclusivity-strip b { color: var(--ink-on-dark); font-weight: 500; }
+
+  /* ===== SECTION SHELL ===== */
+  section { padding: 84px 0; }
+  .section-head { max-width: 640px; margin-bottom: 48px; }
+  .section-head h2 { font-size: clamp(26px, 3vw, 34px); }
+  .section-head p { color: var(--ink-soft); margin-top: 14px; font-size: 17px; }
+
+  /* ===== PAIN MECHANISMS (spec list, not cards) ===== */
+  .spec-list { border-top: 1px solid var(--line); }
+  .spec-row {
+    display: grid;
+    grid-template-columns: 220px 1fr 200px;
+    gap: 32px;
+    padding: 30px 0;
+    border-bottom: 1px solid var(--line);
+    align-items: start;
+  }
+  @media (max-width: 760px) { .spec-row { grid-template-columns: 1fr; gap: 10px; } }
+  .spec-row .label {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 18px;
+  }
+  .spec-row .desc { color: var(--ink-soft); font-size: 16px; }
+  .spec-row .mech {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--steel);
+    text-align: right;
+    line-height: 1.7;
+  }
+  @media (max-width: 760px) { .spec-row .mech { text-align: left; } }
+
+  /* ===== PROOF / RHENUS ===== */
+  .proof {
+    background: var(--bg-panel);
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+  }
+  .proof-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 56px;
+    align-items: center;
+  }
+  @media (max-width: 880px) { .proof-grid { grid-template-columns: 1fr; } }
+  .proof-stats { display: flex; gap: 36px; margin-top: 28px; flex-wrap: wrap; }
+  .stat .n { font-family: var(--font-mono); font-size: 30px; color: var(--accent); font-weight: 600; }
+  .stat .l { font-size: 13px; color: var(--ink-soft); margin-top: 4px; }
+  canvas#peakchart { width: 100%; height: auto; }
+  .chart-wrap { background: var(--bg); border: 1px solid var(--line); padding: 20px; }
+  .chart-label { font-family: var(--font-mono); font-size: 11.5px; color: var(--ink-soft); display: flex; justify-content: space-between; margin-top: 10px; }
+
+  /* ===== HOW IT WORKS ===== */
+  .how-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 0;
+    border-top: 1px solid var(--line);
+    border-left: 1px solid var(--line);
+  }
+  @media (max-width: 760px) { .how-grid { grid-template-columns: 1fr; } }
+  .how-col {
+    padding: 26px 28px;
+    border-right: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+  }
+  .how-col .t { font-family: var(--font-display); font-weight: 600; font-size: 16px; margin-bottom: 8px; }
+  .how-col .v { font-family: var(--font-mono); color: var(--accent); font-size: 22px; margin-bottom: 10px; display: block; }
+  .how-col p { color: var(--ink-soft); font-size: 15px; margin: 0; }
+  .how-col.hi { background: var(--bg-dark); color: var(--ink-on-dark); }
+  .how-col.hi .t { color: var(--ink-on-dark); }
+  .how-col.hi p { color: var(--ink-on-dark-soft); }
+  .how-col.hi .v { color: var(--accent-on-dark); }
+
+  /* ===== MARKET ===== */
+  .market-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 40px; }
+  @media (max-width: 760px) { .market-grid { grid-template-columns: 1fr; } }
+  .market-item .n { font-family: var(--font-mono); font-size: 38px; color: var(--ink); }
+  .market-item .l { font-size: 14.5px; color: var(--ink-soft); margin-top: 6px; }
+
+  /* ===== SECTORS ===== */
+  .sector-list { display: flex; flex-direction: column; }
+  .sector-row {
+    display: flex; justify-content: space-between; align-items: baseline;
+    padding: 22px 0; border-bottom: 1px solid var(--line);
+  }
+  .sector-row:first-child { border-top: 1px solid var(--line); }
+  .sector-row .name { font-family: var(--font-display); font-weight: 600; font-size: 19px; }
+  .sector-row .desc { color: var(--ink-soft); font-size: 15px; max-width: 40ch; text-align: right; }
+  @media (max-width: 640px) { .sector-row { flex-direction: column; gap: 6px; } .sector-row .desc { text-align: left; } }
+
+  /* ===== CTA ===== */
+  .cta-block {
+    background: var(--bg-dark);
+    color: var(--ink-on-dark);
+    padding: 84px 0;
+    text-align: left;
+  }
+  .cta-block h2 { color: #fff; font-size: clamp(26px, 3.4vw, 38px); max-width: 20ch; }
+  .cta-block p { color: var(--ink-on-dark-soft); max-width: 48ch; margin-top: 16px; font-size: 17px; }
+
+  footer {
+    padding: 40px 0 50px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--ink-soft);
+    display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px;
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap navrow">
+    <div class="brand">Kineti<span>Core</span>™</div>
+    <div class="navlinks">
+      <a href="#problem">The problem</a>
+      <a href="#proof">Proof</a>
+      <a href="#how">The system</a>
+      <a href="#sectors">Sectors</a>
+      <a href="#contact">Contact</a>
+    </div>
+    <a href="#contact" class="btn btn-light" style="font-size:13px;padding:9px 16px;">Talk to us</a>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <div class="eyebrow">KINETICORE™ — EXCLUSIVE AUSTRALIAN DISTRIBUTOR, QUINTEQ ENERGY BV</div>
+      <h1 style="margin-top:16px;">We install proven technology.<br>We deliver a calculable return.</h1>
+      <p class="lede">THOR is a flywheel energy storage system that absorbs your site's electrical peaks in real time — no chemistry, no degradation, a 30ms response, and a payback period you can put in front of your CFO.</p>
+      <div class="hero-cta">
+        <a href="#contact" class="btn btn-primary">Request a site assessment</a>
+        <a href="#proof" class="btn btn-ghost">See the Rhenus results</a>
+      </div>
+    </div>
+    <div class="flywheel-stage">
+      <div>
+        <canvas id="flywheel" width="420" height="420"></canvas>
+        <div class="flywheel-caption">THOR ROTOR — INDICATIVE, LIVE RESPONSE &lt;30MS</div>
+      </div>
+    </div>
+  </div>
+  <div class="wrap exclusivity-strip">
+    <div><b>USD 465M</b> global flywheel storage market</div>
+    <div><b>26.5%</b> CAGR</div>
+    <div><b>0</b> verified non-Dutch installations in AU market, mid-2026</div>
+    <div><b>Patent-protected</b> — sourced exclusively through HBIT</div>
+  </div>
+</header>
+
+<section id="problem">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">THE PROBLEM</div>
+      <h2>Three mechanisms are quietly compounding your electricity cost</h2>
+      <p>None of them show up as a single alarming line item. All three show up on every invoice, and two of them carry forward for months after the event that caused them.</p>
+    </div>
+    <div class="spec-list">
+      <div class="spec-row">
+        <div class="label">Demand ratchet</div>
+        <div class="desc">A single short peak sets your billed demand for the rest of the month — in some networks, for up to 12 months forward. One bad afternoon becomes a year-long cost.</div>
+        <div class="mech">TARIFF: $/kVA/MONTH<br>RATCHET WINDOW: UP TO 12MO</div>
+      </div>
+      <div class="spec-row">
+        <div class="label">Power factor penalty</div>
+        <div class="desc">Motors and drives that draw reactive power get penalised directly on the bill, independent of how much real work that power did.</div>
+        <div class="mech">PENALTY: REACTIVE kVAr<br>TRIGGER: LOW COS φ</div>
+      </div>
+      <div class="spec-row">
+        <div class="label">Harmonic distortion</div>
+        <div class="desc">VFDs and soft starters inject harmonics back into the network. Left unmanaged, it's a compliance exposure as much as a cost one.</div>
+        <div class="mech">STANDARD: AS/NZS 61000<br>SOURCE: DIODE-RECTIFIER VFDs</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="proof" class="proof">
+  <div class="wrap proof-grid">
+    <div>
+      <div class="eyebrow">PROOF POINT — RHENUS WAALHAVEN, ROTTERDAM</div>
+      <h2 style="margin-top:14px; font-size:clamp(24px,2.8vw,32px);">One flywheel, one substation, 65% off the peak</h2>
+      <p style="color:var(--ink-soft); margin-top:14px;">Installed between the substation and the container-lifting cranes creating the peaks. Live since Q2 2024.</p>
+      <div class="proof-stats">
+        <div class="stat"><div class="n">600→210</div><div class="l">kW peak demand, before → after</div></div>
+        <div class="stat"><div class="n">65%</div><div class="l">peak reduction</div></div>
+        <div class="stat"><div class="n">&lt;30ms</div><div class="l">response time</div></div>
+      </div>
+    </div>
+    <div class="chart-wrap">
+      <canvas id="peakchart" width="480" height="280"></canvas>
+      <div class="chart-label"><span>BEFORE THOR</span><span>AFTER THOR</span></div>
+    </div>
+  </div>
+</section>
+
+<section id="how">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">THE SYSTEM</div>
+      <h2>A spinning mass, not a chemical cell</h2>
+      <p>THOR stores energy mechanically, in a rotating mass under vacuum. It charges and discharges thousands of times without degradation — a different set of trade-offs to batteries, and for this job, the better ones.</p>
+    </div>
+    <div class="how-grid">
+      <div class="how-col hi">
+        <span class="v">&lt;30ms</span>
+        <div class="t">Response time</div>
+        <p>Fast enough to absorb a peak before it registers on the network's measurement window.</p>
+      </div>
+      <div class="how-col">
+        <span class="v">20+ yrs</span>
+        <div class="t">Service life</div>
+        <p>No chemical degradation, no capacity fade, no replacement cycle to budget for.</p>
+      </div>
+      <div class="how-col">
+        <span class="v">∞ cycles*</span>
+        <div class="t">Cycle life</div>
+        <p>Designed for continuous daily cycling — the exact duty profile that shortens battery life fastest.</p>
+      </div>
+      <div class="how-col">
+        <span class="v">Zero</span>
+        <div class="t">Thermal runaway risk</div>
+        <p>No lithium chemistry on site. A materially different risk and insurance profile.</p>
+      </div>
+      <div class="how-col">
+        <span class="v">Local</span>
+        <div class="t">Peak absorption</div>
+        <p>Sits between your substation and the load creating the peak — the peak simply never reaches the meter.</p>
+      </div>
+      <div class="how-col">
+        <span class="v">1</span>
+        <div class="t">Distributor in Australia</div>
+        <p>QuinteQ's global patents, HBIT's exclusive distribution. Not sourceable through a competitor.</p>
+      </div>
+    </div>
+    <p style="font-family:var(--font-mono); font-size:11.5px; color:var(--ink-soft); margin-top:14px;">*Rated for continuous duty cycling within design load range — see technical specification for site-specific figures.</p>
+  </div>
+</section>
+
+<section id="sectors">
+  <div class="wrap">
+    <div class="section-head">
+      <div class="eyebrow">WHO THIS IS FOR</div>
+      <h2>If your site has a peak-demand problem, it usually looks like one of these</h2>
+    </div>
+    <div class="sector-list">
+      <div class="sector-row">
+        <div class="name">Ports &amp; terminals</div>
+        <div class="desc">Crane lift cycles and electric terminal trucks creating sharp, repeated demand spikes</div>
+      </div>
+      <div class="sector-row">
+        <div class="name">Foundries</div>
+        <div class="desc">Induction furnace start-up loads pushing peak demand and harmonics simultaneously</div>
+      </div>
+      <div class="sector-row">
+        <div class="name">Grain &amp; oilseed processing</div>
+        <div class="desc">Screw press and mill motors starting DOL or star-delta against a tight transformer ratio</div>
+      </div>
+      <div class="sector-row">
+        <div class="name">General heavy industrial</div>
+        <div class="desc">Any site with ≥120kVA demand tariff and motors in the 55–250kW range starting direct-on-line</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="cta-block">
+  <div class="wrap" id="contact">
+    <h2>Bring us your last twelve months of invoices.</h2>
+    <p>We'll tell you, in writing, whether the ratchet, the power factor penalty, or the harmonics are your actual cost driver — and what a THOR installation would be worth to you. No retainer, no conflict of interest: HBIT is an independent, unconflicted advisor.</p>
+    <div class="hero-cta">
+      <a href="#" class="btn btn-primary">Request a site assessment</a>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="wrap" style="display:flex; justify-content:space-between; width:100%;">
+    <span>KC_20260919_WEB_THORWebsitePage_v01</span>
+    <span>KinetiCore™ is a business unit of Hans Brinckers Import &amp; Trade (HBIT), Newport NSW</span>
+  </div>
+</footer>
+
+<script>
+// ---- Flywheel hero animation ----
+(function(){
+  const canvas = document.getElementById('flywheel');
+  const ctx = canvas.getContext('2d');
+  let angle = 0;
+  const cx = 210, cy = 210, r = 130;
+
+  function isDark(){
+    const attr = document.documentElement.getAttribute('data-theme');
+    if (attr === 'dark') return true;
+    if (attr === 'light') return false;
+    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  }
+
+  function draw(){
+    ctx.clearRect(0,0,420,420);
+    const dark = isDark();
+    const ring = dark ? '#3A4652' : '#3B4C5C';
+    const accent = '#D9A63E';
+    const hub = dark ? '#0F1418' : '#0F1418';
+
+    // outer housing ring
+    ctx.beginPath();
+    ctx.arc(cx, cy, r+18, 0, Math.PI*2);
+    ctx.strokeStyle = dark ? '#2C363F' : '#3B4C5C55';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    // rotor disc
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(angle);
+    ctx.beginPath();
+    ctx.arc(0, 0, r, 0, Math.PI*2);
+    ctx.strokeStyle = ring;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // spokes
+    for (let i=0; i<6; i++){
+      const a = (Math.PI/3)*i;
+      ctx.beginPath();
+      ctx.moveTo(0,0);
+      ctx.lineTo(Math.cos(a)*r*0.92, Math.sin(a)*r*0.92);
+      ctx.strokeStyle = i % 2 === 0 ? accent : ring;
+      ctx.lineWidth = i % 2 === 0 ? 2.5 : 1.4;
+      ctx.stroke();
+    }
+    // rim ticks
+    for (let i=0; i<24; i++){
+      const a = (Math.PI/12)*i;
+      const x1 = Math.cos(a)*(r-4), y1 = Math.sin(a)*(r-4);
+      const x2 = Math.cos(a)*(r+4), y2 = Math.sin(a)*(r+4);
+      ctx.beginPath();
+      ctx.moveTo(x1,y1); ctx.lineTo(x2,y2);
+      ctx.strokeStyle = ring;
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    // hub
+    ctx.beginPath();
+    ctx.arc(cx, cy, 14, 0, Math.PI*2);
+    ctx.fillStyle = accent;
+    ctx.fill();
+
+    angle += 0.028;
+    requestAnimationFrame(draw);
+  }
+  draw();
+})();
+
+// ---- Peak-demand before/after chart ----
+(function(){
+  const canvas = document.getElementById('peakchart');
+  const ctx = canvas.getContext('2d');
+  const W = 480, H = 280, pad = 36;
+
+  function isDark(){
+    const attr = document.documentElement.getAttribute('data-theme');
+    if (attr === 'dark') return true;
+    if (attr === 'light') return false;
+    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  }
+
+  // synthetic but representative demand trace: spiky before, flattened after
+  function genBefore(n){
+    const pts = [];
+    let base = 90;
+    for (let i=0;i<n;i++){
+      let v = base + Math.sin(i*0.5)*20 + (Math.random()*10);
+      if (i % 11 === 4 || i % 13 === 2) v = 200 + Math.random()*15; // peak spikes near 600kW scale
+      pts.push(v);
+    }
+    return pts;
+  }
+  const before = genBefore(60);
+  const after = before.map(v => Math.min(v, 70) + Math.random()*6);
+
+  let progress = 0;
+  const target = 1;
+
+  function drawFrame(){
+    ctx.clearRect(0,0,W,H);
+    const dark = isDark();
+    const gridColor = dark ? '#2C363F' : '#E1E4E6';
+    const ink = dark ? '#9BA7B0' : '#4A555F';
+    const beforeColor = dark ? '#5B6672' : '#8A97A1';
+    const afterColor = '#B8811E';
+
+    // gridlines
+    ctx.strokeStyle = gridColor;
+    ctx.lineWidth = 1;
+    for (let i=0;i<=4;i++){
+      const y = pad + (H-2*pad) * (i/4);
+      ctx.beginPath(); ctx.moveTo(pad,y); ctx.lineTo(W-pad,y); ctx.stroke();
+    }
+
+    const maxV = 230;
+    function plot(arr, color, alpha){
+      ctx.beginPath();
+      arr.forEach((v,i)=>{
+        const x = pad + (W-2*pad) * (i/(arr.length-1)) * Math.min(progress*1.2,1);
+        const y = H - pad - (v/maxV) * (H-2*pad);
+        if (i===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+      });
+      ctx.strokeStyle = color;
+      ctx.globalAlpha = alpha;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+    plot(before, beforeColor, 0.9);
+    plot(after, afterColor, 1);
+
+    // 600kW / 210kW reference labels
+    ctx.fillStyle = ink;
+    ctx.font = '11px JetBrains Mono, monospace';
+    ctx.fillText('600kW', pad, pad - 10);
+    ctx.fillText('210kW', pad, H - pad + 18);
+
+    if (progress < target){
+      progress += 0.015;
+      requestAnimationFrame(drawFrame);
+    }
+  }
+  // trigger animation once visible
+  const obs = new IntersectionObserver((entries)=>{
+    entries.forEach(e=>{
+      if (e.isIntersecting){ progress = 0; drawFrame(); obs.disconnect(); }
+    });
+  }, {threshold: 0.3});
+  obs.observe(canvas);
+  drawFrame();
+})();
+</script>
+
+</body>
+</html>
